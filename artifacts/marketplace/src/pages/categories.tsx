@@ -26,28 +26,33 @@ export default function Categories() {
         </div>
       ) : categories && categories.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category) => (
-            <Link key={category.name} href={`/products?category=${encodeURIComponent(category.name)}`} className="block group">
-              <Card className="h-full transition-all hover:border-primary/50 hover:shadow-md">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                    <Folders className="w-5 h-5" />
-                  </div>
-                  {isRtl
-                    ? <ChevronLeft className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0" />
-                    : <ChevronRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0" />
-                  }
-                </CardHeader>
-                <CardContent>
-                  <CardTitle className="mb-2">{category.name}</CardTitle>
-                  <div className="flex items-center text-sm text-muted-foreground gap-2">
-                    <Package className="w-4 h-4" />
-                    <span>{tc.productCount(category.productCount)}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+          {categories.map((category) => {
+            const displayCatName = isRtl && (category as any).nameAr
+              ? (category as any).nameAr
+              : category.name;
+            return (
+              <Link key={category.name} href={`/products?category=${encodeURIComponent(category.name)}`} className="block group">
+                <Card className="h-full transition-all hover:border-primary/50 hover:shadow-md">
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                      <Folders className="w-5 h-5" />
+                    </div>
+                    {isRtl
+                      ? <ChevronLeft className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0" />
+                      : <ChevronRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0" />
+                    }
+                  </CardHeader>
+                  <CardContent>
+                    <CardTitle className="mb-2">{displayCatName}</CardTitle>
+                    <div className="flex items-center text-sm text-muted-foreground gap-2">
+                      <Package className="w-4 h-4" />
+                      <span>{tc.productCount(category.productCount)}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       ) : (
         <Card className="p-12 flex flex-col items-center justify-center text-center">

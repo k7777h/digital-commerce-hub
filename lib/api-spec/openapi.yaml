@@ -255,14 +255,20 @@ components:
           type: integer
         name:
           type: string
+        nameAr:
+          type: ["string", "null"]
         description:
           type: string
+        descriptionAr:
+          type: ["string", "null"]
         price:
           type: number
         stock:
           type: integer
         category:
           type: string
+        categoryAr:
+          type: ["string", "null"]
         imageUrl:
           type: ["string", "null"]
         createdAt:
@@ -276,7 +282,11 @@ components:
         name:
           type: string
           minLength: 1
+        nameAr:
+          type: string
         description:
+          type: string
+        descriptionAr:
           type: string
         price:
           type: number
@@ -287,6 +297,8 @@ components:
         category:
           type: string
           minLength: 1
+        categoryAr:
+          type: string
         imageUrl:
           type: string
 
@@ -296,7 +308,11 @@ components:
         name:
           type: string
           minLength: 1
+        nameAr:
+          type: string
         description:
+          type: string
+        descriptionAr:
           type: string
         price:
           type: number
@@ -305,6 +321,8 @@ components:
           type: integer
           minimum: 0
         category:
+          type: string
+        categoryAr:
           type: string
         imageUrl:
           type: string

@@ -66,6 +66,9 @@ router.get("/products", async (req, res) => {
         ...p,
         price: Number(p.price),
         createdAt: p.createdAt.toISOString(),
+        nameAr: p.nameAr ?? null,
+        descriptionAr: p.descriptionAr ?? null,
+        categoryAr: p.categoryAr ?? null,
       }))
     );
   } catch (err) {
@@ -85,10 +88,13 @@ router.post("/products", async (req, res) => {
       .insert(productsTable)
       .values({
         name: body.data.name,
+        nameAr: body.data.nameAr ?? null,
         description: body.data.description,
+        descriptionAr: body.data.descriptionAr ?? null,
         price: String(body.data.price),
         stock: body.data.stock,
         category: body.data.category,
+        categoryAr: body.data.categoryAr ?? null,
         imageUrl: body.data.imageUrl ?? null,
       })
       .returning();
@@ -97,6 +103,9 @@ router.post("/products", async (req, res) => {
       ...product,
       price: Number(product.price),
       createdAt: product.createdAt.toISOString(),
+      nameAr: product.nameAr ?? null,
+      descriptionAr: product.descriptionAr ?? null,
+      categoryAr: product.categoryAr ?? null,
     });
   } catch (err) {
     return res.status(500).json({ error: "Internal server error" });
@@ -151,6 +160,9 @@ router.get("/products/:id", async (req, res) => {
       ...product,
       price: Number(product.price),
       createdAt: product.createdAt.toISOString(),
+      nameAr: product.nameAr ?? null,
+      descriptionAr: product.descriptionAr ?? null,
+      categoryAr: product.categoryAr ?? null,
     });
   } catch (err) {
     return res.status(500).json({ error: "Internal server error" });
@@ -169,10 +181,13 @@ router.patch("/products/:id", async (req, res) => {
 
     const updates: Record<string, unknown> = {};
     if (body.data.name !== undefined) updates.name = body.data.name;
+    if (body.data.nameAr !== undefined) updates.nameAr = body.data.nameAr;
     if (body.data.description !== undefined) updates.description = body.data.description;
+    if (body.data.descriptionAr !== undefined) updates.descriptionAr = body.data.descriptionAr;
     if (body.data.price !== undefined) updates.price = String(body.data.price);
     if (body.data.stock !== undefined) updates.stock = body.data.stock;
     if (body.data.category !== undefined) updates.category = body.data.category;
+    if (body.data.categoryAr !== undefined) updates.categoryAr = body.data.categoryAr;
     if (body.data.imageUrl !== undefined) updates.imageUrl = body.data.imageUrl;
 
     if (Object.keys(updates).length === 0) {
@@ -181,7 +196,7 @@ router.patch("/products/:id", async (req, res) => {
         .from(productsTable)
         .where(eq(productsTable.id, params.data.id));
       if (!existing) return res.status(404).json({ error: "Product not found" });
-      return res.json({ ...existing, price: Number(existing.price), createdAt: existing.createdAt.toISOString() });
+      return res.json({ ...existing, price: Number(existing.price), createdAt: existing.createdAt.toISOString(), nameAr: existing.nameAr ?? null, descriptionAr: existing.descriptionAr ?? null, categoryAr: existing.categoryAr ?? null });
     }
 
     const [product] = await db
@@ -198,6 +213,9 @@ router.patch("/products/:id", async (req, res) => {
       ...product,
       price: Number(product.price),
       createdAt: product.createdAt.toISOString(),
+      nameAr: product.nameAr ?? null,
+      descriptionAr: product.descriptionAr ?? null,
+      categoryAr: product.categoryAr ?? null,
     });
   } catch (err) {
     return res.status(500).json({ error: "Internal server error" });
@@ -262,6 +280,9 @@ router.post("/products/:id/purchase", async (req, res) => {
       ...product,
       price: Number(product.price),
       createdAt: product.createdAt.toISOString(),
+      nameAr: product.nameAr ?? null,
+      descriptionAr: product.descriptionAr ?? null,
+      categoryAr: product.categoryAr ?? null,
     });
   } catch (err) {
     return res.status(500).json({ error: "Internal server error" });

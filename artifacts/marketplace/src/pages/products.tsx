@@ -12,9 +12,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useLang } from "@/i18n/LanguageContext";
 import { useCart } from "@/context/CartContext";
 import { cn } from "@/lib/utils";
+import { displayName, displayCategory } from "@/lib/i18n-product";
 
 export default function Products() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const tp = t.products;
   const tc = t.cart;
 
@@ -25,9 +26,7 @@ export default function Products() {
   const [justAdded, setJustAdded] = useState<Set<number>>(new Set());
 
   useState(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearch(search);
-    }, 300);
+    const handler = setTimeout(() => setDebouncedSearch(search), 300);
     return () => clearTimeout(handler);
   });
 
@@ -40,29 +39,14 @@ export default function Products() {
   const { toast } = useToast();
   const { addToCart, getQuantity } = useCart();
 
-  const handleAddToCart = (product: { id: number; name: string; price: number; imageUrl: string | null; category: string; stock: number }) => {
-    if (product.stock === 0) return;
-    addToCart({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      imageUrl: product.imageUrl,
-      category: product.category,
-    });
-    toast({
-      title: tc.addedToCart,
-      description: tc.addedToCartDesc(product.name),
-    });
+  const handleAddToCart = (product: typeof products extends (infer T)[] | undefined ? T : never) => {
+    if (!product || product.stock === 0) return;
+    addToCart({ id: product.id, name: product.name, price: product.price, imageUrl: product.imageUrl, category: product.category });
+    toast({ title: tc.addedToCart, description: tc.addedToCartDesc(displayName(product, lang)) });
     setJustAdded((prev) => {
       const next = new Set(prev);
       next.add(product.id);
-      setTimeout(() => {
-        setJustAdded((s) => {
-          const n = new Set(s);
-          n.delete(product.id);
-          return n;
-        });
-      }, 1500);
+      setTimeout(() => setJustAdded((s) => { const n = new Set(s); n.delete(product.id); return n; }), 1500);
       return next;
     });
   };
@@ -74,10 +58,7 @@ export default function Products() {
           <h1 className="text-3xl font-bold tracking-tight">{tp.title}</h1>
           <p className="text-muted-foreground mt-2">{tp.subtitle}</p>
         </div>
-        <Link
-          href="/products/new"
-          className="inline-flex items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:opacity-90"
-        >
+        <Link href="/products/new" className="inline-flex items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:opacity-90">
           {tp.addProduct}
         </Link>
       </div>
@@ -85,18 +66,11 @@ export default function Products() {
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={tp.searchPlaceholder}
-            className="ps-9"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          <Input placeholder={tp.searchPlaceholder} className="ps-9" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <div className="flex gap-2">
           <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder={tp.sortBy} />
-            </SelectTrigger>
+            <SelectTrigger className="w-[140px]"><SelectValue placeholder={tp.sortBy} /></SelectTrigger>
             <SelectContent>
               <SelectItem value="createdAt">{tp.sortDateAdded}</SelectItem>
               <SelectItem value="name">{tp.sortName}</SelectItem>
@@ -105,9 +79,7 @@ export default function Products() {
             </SelectContent>
           </Select>
           <Select value={sortOrder} onValueChange={(v: any) => setSortOrder(v)}>
-            <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder={tp.sortOrder} />
-            </SelectTrigger>
+            <SelectTrigger className="w-[120px]"><SelectValue placeholder={tp.sortOrder} /></SelectTrigger>
             <SelectContent>
               <SelectItem value="desc">{tp.sortDesc}</SelectItem>
               <SelectItem value="asc">{tp.sortAsc}</SelectItem>
@@ -125,78 +97,49 @@ export default function Products() {
           {products.map((product) => {
             const qty = getQuantity(product.id);
             const added = justAdded.has(product.id);
+            const localName = displayName(product, lang);
+            const localCategory = displayCategory(product, lang);
             return (
-              <Card
-                key={product.id}
-                className="overflow-hidden flex flex-col transition-all hover:border-primary/50 hover:shadow-md"
-              >
-                <Link
-                  href={`/products/${product.id}`}
-                  className="block relative aspect-video bg-muted group"
-                >
+              <Card key={product.id} className="overflow-hidden flex flex-col transition-all hover:border-primary/50 hover:shadow-md">
+                <Link href={`/products/${product.id}`} className="block relative aspect-video bg-muted group">
                   {product.imageUrl ? (
-                    <img
-                      src={product.imageUrl}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+                    <img src={product.imageUrl} alt={localName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                       <Package className="w-8 h-8 opacity-20" />
                     </div>
                   )}
                   {product.stock === 0 && (
-                    <div className="absolute top-2 end-2">
-                      <Badge variant="destructive">{tp.outOfStock}</Badge>
-                    </div>
+                    <div className="absolute top-2 end-2"><Badge variant="destructive">{tp.outOfStock}</Badge></div>
                   )}
                   {qty > 0 && (
                     <div className="absolute top-2 start-2">
-                      <Badge className="bg-primary text-primary-foreground">
-                        {tc.alreadyInCart(qty)}
-                      </Badge>
+                      <Badge className="bg-primary text-primary-foreground">{tc.alreadyInCart(qty)}</Badge>
                     </div>
                   )}
                 </Link>
                 <CardContent className="p-4 flex-1 flex flex-col">
                   <div className="flex justify-between items-start mb-2">
-                    <Link
-                      href={`/products/${product.id}`}
-                      className="font-semibold truncate pe-2 hover:underline hover:text-primary transition-colors"
-                    >
-                      {product.name}
+                    <Link href={`/products/${product.id}`} className="font-semibold truncate pe-2 hover:underline hover:text-primary transition-colors">
+                      {localName}
                     </Link>
-                    <div className="font-medium text-primary whitespace-nowrap">
-                      {formatCurrency(product.price)}
-                    </div>
+                    <div className="font-medium text-primary whitespace-nowrap">{formatCurrency(product.price)}</div>
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
-                    <Badge variant="secondary" className="font-normal">
-                      {product.category}
-                    </Badge>
+                    <Badge variant="secondary" className="font-normal">{localCategory}</Badge>
                     <span>{tp.inStock(product.stock)}</span>
                   </div>
                   <div className="mt-auto pt-4 border-t border-border">
                     <Button
-                      className={cn(
-                        "w-full transition-all duration-300",
-                        added && "bg-green-600 hover:bg-green-700 border-green-600 text-white"
-                      )}
+                      className={cn("w-full transition-all duration-300", added && "bg-green-600 hover:bg-green-700 border-green-600 text-white")}
                       variant={added ? "default" : "outline"}
                       disabled={product.stock === 0}
                       onClick={() => handleAddToCart(product)}
                     >
-                      {added ? (
-                        <>
-                          <Check className="w-4 h-4 me-2" />
-                          {tc.addedToCart}
-                        </>
-                      ) : (
-                        <>
-                          <ShoppingCart className="w-4 h-4 me-2" />
-                          {tp.purchase}
-                        </>
-                      )}
+                      {added
+                        ? <><Check className="w-4 h-4 me-2" />{tc.addedToCart}</>
+                        : <><ShoppingCart className="w-4 h-4 me-2" />{tp.purchase}</>
+                      }
                     </Button>
                   </div>
                 </CardContent>
@@ -209,14 +152,7 @@ export default function Products() {
           <Filter className="w-12 h-12 text-muted-foreground/50 mb-4" />
           <h3 className="text-lg font-medium">{tp.noMatch}</h3>
           <p className="text-muted-foreground max-w-sm mt-2 mb-4">{tp.noMatchSub}</p>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setSearch("");
-              setSortBy("createdAt");
-              setSortOrder("desc");
-            }}
-          >
+          <Button variant="outline" onClick={() => { setSearch(""); setSortBy("createdAt"); setSortOrder("desc"); }}>
             {tp.clearFilters}
           </Button>
         </Card>

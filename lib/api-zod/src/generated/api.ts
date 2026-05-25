@@ -34,10 +34,13 @@ export const ListProductsQueryParams = zod.object({
 export const ListProductsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "nameAr": zod.string().nullish(),
   "description": zod.string(),
+  "descriptionAr": zod.string().nullish(),
   "price": zod.number(),
   "stock": zod.number(),
   "category": zod.string(),
+  "categoryAr": zod.string().nullish(),
   "imageUrl": zod.string().nullable(),
   "createdAt": zod.coerce.date()
 })
@@ -57,10 +60,13 @@ export const createProductBodyStockMin = 0;
 
 export const CreateProductBody = zod.object({
   "name": zod.string().min(1),
+  "nameAr": zod.string().optional(),
   "description": zod.string(),
+  "descriptionAr": zod.string().optional(),
   "price": zod.number().min(createProductBodyPriceMin),
   "stock": zod.number().min(createProductBodyStockMin),
   "category": zod.string().min(1),
+  "categoryAr": zod.string().optional(),
   "imageUrl": zod.string().optional()
 })
 
@@ -89,10 +95,13 @@ export const GetProductParams = zod.object({
 export const GetProductResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "nameAr": zod.string().nullish(),
   "description": zod.string(),
+  "descriptionAr": zod.string().nullish(),
   "price": zod.number(),
   "stock": zod.number(),
   "category": zod.string(),
+  "categoryAr": zod.string().nullish(),
   "imageUrl": zod.string().nullable(),
   "createdAt": zod.coerce.date()
 })
@@ -114,20 +123,26 @@ export const updateProductBodyStockMin = 0;
 
 export const UpdateProductBody = zod.object({
   "name": zod.string().min(1).optional(),
+  "nameAr": zod.string().optional(),
   "description": zod.string().optional(),
+  "descriptionAr": zod.string().optional(),
   "price": zod.number().min(updateProductBodyPriceMin).optional(),
   "stock": zod.number().min(updateProductBodyStockMin).optional(),
   "category": zod.string().optional(),
+  "categoryAr": zod.string().optional(),
   "imageUrl": zod.string().optional()
 })
 
 export const UpdateProductResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "nameAr": zod.string().nullish(),
   "description": zod.string(),
+  "descriptionAr": zod.string().nullish(),
   "price": zod.number(),
   "stock": zod.number(),
   "category": zod.string(),
+  "categoryAr": zod.string().nullish(),
   "imageUrl": zod.string().nullable(),
   "createdAt": zod.coerce.date()
 })
@@ -158,10 +173,13 @@ export const PurchaseProductBody = zod.object({
 export const PurchaseProductResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "nameAr": zod.string().nullish(),
   "description": zod.string(),
+  "descriptionAr": zod.string().nullish(),
   "price": zod.number(),
   "stock": zod.number(),
   "category": zod.string(),
+  "categoryAr": zod.string().nullish(),
   "imageUrl": zod.string().nullable(),
   "createdAt": zod.coerce.date()
 })

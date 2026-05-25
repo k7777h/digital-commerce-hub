@@ -9,11 +9,14 @@
 export interface ProductUpdate {
   /** @minLength 1 */
   name?: string;
+  nameAr?: string;
   description?: string;
+  descriptionAr?: string;
   /** @minimum 0 */
   price?: number;
   /** @minimum 0 */
   stock?: number;
   category?: string;
+  categoryAr?: string;
   imageUrl?: string;
 }

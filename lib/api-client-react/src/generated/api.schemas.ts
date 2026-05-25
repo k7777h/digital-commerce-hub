@@ -12,10 +12,16 @@ export interface HealthStatus {
 export interface Product {
   id: number;
   name: string;
+  /** @nullable */
+  nameAr?: string | null;
   description: string;
+  /** @nullable */
+  descriptionAr?: string | null;
   price: number;
   stock: number;
   category: string;
+  /** @nullable */
+  categoryAr?: string | null;
   /** @nullable */
   imageUrl: string | null;
   createdAt: string;
@@ -24,25 +30,31 @@ export interface Product {
 export interface ProductInput {
   /** @minLength 1 */
   name: string;
+  nameAr?: string;
   description: string;
+  descriptionAr?: string;
   /** @minimum 0 */
   price: number;
   /** @minimum 0 */
   stock: number;
   /** @minLength 1 */
   category: string;
+  categoryAr?: string;
   imageUrl?: string;
 }
 
 export interface ProductUpdate {
   /** @minLength 1 */
   name?: string;
+  nameAr?: string;
   description?: string;
+  descriptionAr?: string;
   /** @minimum 0 */
   price?: number;
   /** @minimum 0 */
   stock?: number;
   category?: string;
+  categoryAr?: string;
   imageUrl?: string;
 }
 

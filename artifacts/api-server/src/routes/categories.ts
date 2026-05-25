@@ -10,6 +10,7 @@ router.get("/categories", async (_req, res) => {
     const categories = await db
       .select({
         name: productsTable.category,
+        nameAr: sql<string | null>`max(${productsTable.categoryAr})`,
         productCount: sql<number>`count(*)::int`,
       })
       .from(productsTable)

@@ -9,12 +9,15 @@
 export interface ProductInput {
   /** @minLength 1 */
   name: string;
+  nameAr?: string;
   description: string;
+  descriptionAr?: string;
   /** @minimum 0 */
   price: number;
   /** @minimum 0 */
   stock: number;
   /** @minLength 1 */
   category: string;
+  categoryAr?: string;
   imageUrl?: string;
 }

@@ -9,10 +9,16 @@
 export interface Product {
   id: number;
   name: string;
+  /** @nullable */
+  nameAr?: string | null;
   description: string;
+  /** @nullable */
+  descriptionAr?: string | null;
   price: number;
   stock: number;
   category: string;
+  /** @nullable */
+  categoryAr?: string | null;
   /** @nullable */
   imageUrl: string | null;
   createdAt: Date;
