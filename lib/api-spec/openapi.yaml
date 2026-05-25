@@ -1,15 +1,18 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Digital Marketplace API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: products
+    description: Product operations
+  - name: categories
+    description: Category operations
 paths:
   /healthz:
     get:
@@ -24,6 +27,216 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      summary: List products
+      description: List products with optional filtering
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: inStock
+          in: query
+          schema:
+            type: boolean
+        - name: minPrice
+          in: query
+          schema:
+            type: number
+        - name: maxPrice
+          in: query
+          schema:
+            type: number
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [name, price, stock, createdAt]
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        "200":
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+    post:
+      operationId: createProduct
+      tags: [products]
+      summary: Create a product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductInput"
+      responses:
+        "201":
+          description: Created product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /products/stats:
+    get:
+      operationId: getProductStats
+      tags: [products]
+      summary: Get marketplace statistics
+      description: Returns summary stats for the dashboard
+      responses:
+        "200":
+          description: Marketplace statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketplaceStats"
+
+  /products/{id}:
+    get:
+      operationId: getProduct
+      tags: [products]
+      summary: Get a product by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateProduct
+      tags: [products]
+      summary: Update a product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductUpdate"
+      responses:
+        "200":
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteProduct
+      tags: [products]
+      summary: Delete a product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /products/{id}/purchase:
+    post:
+      operationId: purchaseProduct
+      tags: [products]
+      summary: Simulate purchasing a product (decrements stock)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PurchaseInput"
+      responses:
+        "200":
+          description: Purchase successful, returns updated product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "400":
+          description: Insufficient stock
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [categories]
+      summary: List all categories with product counts
+      responses:
+        "200":
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +247,105 @@ components:
       required:
         - status
 
+    Product:
+      type: object
+      required: [id, name, description, price, stock, category, imageUrl, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        stock:
+          type: integer
+        category:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    ProductInput:
+      type: object
+      required: [name, description, price, stock, category]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        price:
+          type: number
+          minimum: 0
+        stock:
+          type: integer
+          minimum: 0
+        category:
+          type: string
+          minLength: 1
+        imageUrl:
+          type: string
+
+    ProductUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        price:
+          type: number
+          minimum: 0
+        stock:
+          type: integer
+          minimum: 0
+        category:
+          type: string
+        imageUrl:
+          type: string
+
+    PurchaseInput:
+      type: object
+      required: [quantity]
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+
+    MarketplaceStats:
+      type: object
+      required: [totalProducts, totalCategories, totalValue, inStockCount, outOfStockCount, lowStockCount]
+      properties:
+        totalProducts:
+          type: integer
+        totalCategories:
+          type: integer
+        totalValue:
+          type: number
+        inStockCount:
+          type: integer
+        outOfStockCount:
+          type: integer
+        lowStockCount:
+          type: integer
+
+    Category:
+      type: object
+      required: [name, productCount]
+      properties:
+        name:
+          type: string
+        productCount:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
