@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Package, Folders, Plus, Store, Languages, ShoppingCart, X, Trash2 } from "lucide-react";
+import { LayoutDashboard, Package, Folders, Plus, Store, Languages, ShoppingCart, X, Trash2, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLang } from "@/i18n/LanguageContext";
 import { useCart } from "@/context/CartContext";
 import { formatCurrency } from "@/lib/format";
+import { displayName, displayCategory } from "@/lib/i18n-product";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -13,7 +14,7 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
   const { t, lang, toggleLang } = useLang();
-  const { items, totalItems, totalPrice, removeFromCart, clearCart } = useCart();
+  const { items, totalItems, totalPrice, removeFromCart, updateQuantity, clearCart } = useCart();
   const [cartOpen, setCartOpen] = useState(false);
   const [badgeBump, setBadgeBump] = useState(false);
   const prevTotal = useRef(totalItems);
@@ -27,18 +28,16 @@ export function Layout({ children }: LayoutProps) {
 
   const isArabic = lang === "ar";
 
-  // Animate badge bump whenever an item is added
   useEffect(() => {
     if (totalItems > prevTotal.current) {
       setBadgeBump(true);
-      const t = setTimeout(() => setBadgeBump(false), 400);
+      const timer = setTimeout(() => setBadgeBump(false), 400);
       prevTotal.current = totalItems;
-      return () => clearTimeout(t);
+      return () => clearTimeout(timer);
     }
     prevTotal.current = totalItems;
   }, [totalItems]);
 
-  // Close cart on outside click
   useEffect(() => {
     if (!cartOpen) return;
     function handler(e: MouseEvent) {
@@ -56,7 +55,10 @@ export function Layout({ children }: LayoutProps) {
       style={{ fontFamily: isArabic ? "'Cairo', sans-serif" : "'Inter', sans-serif" }}
     >
       {/* Sidebar */}
-      <div className={cn("w-64 flex-shrink-0 border-r bg-sidebar text-sidebar-foreground hidden md:flex flex-col", isArabic && "border-r-0 border-l")}>
+      <div className={cn(
+        "w-64 flex-shrink-0 border-r bg-sidebar text-sidebar-foreground hidden md:flex flex-col",
+        isArabic && "border-r-0 border-l"
+      )}>
         <div className="h-16 flex items-center px-6 border-b border-sidebar-border font-bold text-lg gap-2 tracking-tight">
           <Store className="w-5 h-5 text-sidebar-primary" />
           <span>{t.appName}</span>
@@ -64,19 +66,15 @@ export function Layout({ children }: LayoutProps) {
         <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive =
-              location === item.href ||
-              (item.href !== "/" && location.startsWith(item.href));
+            const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
             return (
               <Link key={item.href} href={item.href} className="block">
-                <div
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  )}
-                >
+                <div className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                )}>
                   <Icon className="w-4 h-4 flex-shrink-0" />
                   {item.label}
                 </div>
@@ -109,9 +107,7 @@ export function Layout({ children }: LayoutProps) {
             <Store className="w-5 h-5 text-primary" />
             <span>{t.appName}</span>
           </div>
-
           <div className="flex items-center gap-2">
-            {/* Language toggle */}
             <button
               onClick={toggleLang}
               className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-border text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-muted transition-colors"
@@ -119,8 +115,6 @@ export function Layout({ children }: LayoutProps) {
               <Languages className="w-4 h-4" />
               {t.langToggle}
             </button>
-
-            {/* Cart button */}
             <button
               onClick={() => setCartOpen((o) => !o)}
               className="relative flex items-center justify-center w-10 h-10 rounded-md border border-border hover:bg-muted transition-colors"
@@ -142,22 +136,20 @@ export function Layout({ children }: LayoutProps) {
           </div>
         </header>
 
-        {/* Cart drawer overlay */}
+        {/* Cart overlay */}
         {cartOpen && (
-          <div className="fixed inset-0 bg-black/30 z-30" onClick={() => setCartOpen(false)} />
+          <div className="fixed inset-0 bg-black/40 z-30" onClick={() => setCartOpen(false)} />
         )}
 
         {/* Cart panel */}
         <div
           ref={cartRef}
           className={cn(
-            "fixed top-0 h-full w-80 bg-card border-s border-border shadow-2xl z-40 flex flex-col transition-transform duration-300",
+            "fixed top-0 h-full w-96 bg-card border-s border-border shadow-2xl z-40 flex flex-col transition-transform duration-300",
             isArabic ? "left-0" : "right-0",
             cartOpen
               ? "translate-x-0"
-              : isArabic
-                ? "-translate-x-full"
-                : "translate-x-full"
+              : isArabic ? "-translate-x-full" : "translate-x-full"
           )}
         >
           {/* Cart header */}
@@ -196,59 +188,105 @@ export function Layout({ children }: LayoutProps) {
               </div>
             ) : (
               <ul className="divide-y divide-border">
-                {items.map((item) => (
-                  <li key={item.id} className="flex gap-3 p-4 group">
-                    {/* Thumbnail */}
-                    <div className="w-14 h-14 rounded-md bg-muted overflow-hidden flex-shrink-0">
-                      {item.imageUrl ? (
-                        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Package className="w-5 h-5 text-muted-foreground/40" />
+                {items.map((item) => {
+                  const localName = displayName(item, lang);
+                  const localCategory = displayCategory(item, lang);
+                  const itemTotal = item.price * item.quantity;
+                  return (
+                    <li key={item.id} className="p-4 space-y-3">
+                      {/* Top row: thumbnail + info + remove */}
+                      <div className="flex gap-3">
+                        <Link href={`/products/${item.id}`} onClick={() => setCartOpen(false)} className="block">
+                          <div className="w-16 h-16 rounded-lg bg-muted overflow-hidden flex-shrink-0">
+                            {item.imageUrl ? (
+                              <img src={item.imageUrl} alt={localName} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Package className="w-5 h-5 text-muted-foreground/40" />
+                              </div>
+                            )}
+                          </div>
+                        </Link>
+                        <div className="flex-1 min-w-0">
+                          <Link
+                            href={`/products/${item.id}`}
+                            onClick={() => setCartOpen(false)}
+                            className="text-sm font-semibold leading-snug line-clamp-2 hover:text-primary transition-colors"
+                          >
+                            {localName}
+                          </Link>
+                          <p className="text-xs text-muted-foreground mt-0.5">{localCategory}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {t.cart.unitPrice}: <span className="font-medium text-foreground">{formatCurrency(item.price)}</span>
+                          </p>
                         </div>
-                      )}
-                    </div>
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <Link
-                        href={`/products/${item.id}`}
-                        onClick={() => setCartOpen(false)}
-                        className="text-sm font-medium leading-snug truncate block hover:text-primary transition-colors"
-                      >
-                        {item.name}
-                      </Link>
-                      <p className="text-xs text-muted-foreground mt-0.5">{item.category}</p>
-                      <div className="flex items-center justify-between mt-1.5">
-                        <span className="text-sm font-semibold text-primary">
-                          {formatCurrency(item.price * item.quantity)}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          ×{item.quantity}
-                        </span>
+                        <button
+                          onClick={() => removeFromCart(item.id)}
+                          className="p-1.5 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all flex-shrink-0 self-start text-muted-foreground"
+                          title={t.cart.remove}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-                    </div>
-                    {/* Remove */}
-                    <button
-                      onClick={() => removeFromCart(item.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-destructive/10 hover:text-destructive transition-all self-start flex-shrink-0"
-                      title={t.cart.remove}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </li>
-                ))}
+
+                      {/* Bottom row: qty controls + subtotal */}
+                      <div className="flex items-center justify-between">
+                        {/* Quantity controls */}
+                        <div className="flex items-center gap-1 border border-border rounded-lg overflow-hidden">
+                          <button
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            className="w-8 h-8 flex items-center justify-center hover:bg-muted transition-colors text-foreground/80 hover:text-foreground"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="w-8 text-center text-sm font-semibold tabular-nums">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            className="w-8 h-8 flex items-center justify-center hover:bg-muted transition-colors text-foreground/80 hover:text-foreground"
+                          >
+                            <span className="text-base leading-none">+</span>
+                          </button>
+                        </div>
+                        {/* Item subtotal */}
+                        <div className="text-end">
+                          <p className="text-xs text-muted-foreground">{t.cart.itemSubtotal(formatCurrency(item.price), item.quantity)}</p>
+                          <p className="text-sm font-bold text-primary">{formatCurrency(itemTotal)}</p>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
 
           {/* Cart footer */}
           {items.length > 0 && (
-            <div className="border-t border-border p-5 space-y-3 flex-shrink-0">
-              <div className="flex items-center justify-between text-sm font-medium">
-                <span className="text-muted-foreground">{t.cart.total}</span>
-                <span className="text-lg font-bold text-foreground">{formatCurrency(totalPrice)}</span>
+            <div className="border-t border-border p-5 space-y-4 flex-shrink-0 bg-card">
+              {/* Per-item breakdown summary */}
+              <div className="space-y-1.5 max-h-28 overflow-y-auto">
+                {items.map((item) => {
+                  const localName = displayName(item, lang);
+                  return (
+                    <div key={item.id} className="flex justify-between text-xs text-muted-foreground">
+                      <span className="truncate me-2 max-w-[180px]">{localName} ×{item.quantity}</span>
+                      <span className="font-medium text-foreground whitespace-nowrap">{formatCurrency(item.price * item.quantity)}</span>
+                    </div>
+                  );
+                })}
               </div>
-              <button className="w-full bg-primary text-primary-foreground py-2.5 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity">
+              <div className="border-t border-border pt-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">{t.cart.total}</span>
+                  <span className="text-xl font-bold text-foreground">{formatCurrency(totalPrice)}</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {t.cart.items(totalItems)}
+                </p>
+              </div>
+              <button className="w-full bg-primary text-primary-foreground py-3 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">
                 {t.cart.checkout}
               </button>
               <button
@@ -261,8 +299,10 @@ export function Layout({ children }: LayoutProps) {
           )}
         </div>
 
-        <main className="flex-1 overflow-y-auto p-6 md:p-8">
-          <div className="max-w-6xl mx-auto">{children}</div>
+        <main className="flex-1 overflow-y-auto">
+          <div className="max-w-7xl mx-auto px-6 md:px-8 py-6 md:py-8">
+            {children}
+          </div>
         </main>
       </div>
     </div>
