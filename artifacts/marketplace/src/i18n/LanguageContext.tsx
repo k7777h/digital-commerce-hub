@@ -11,7 +11,10 @@ interface LanguageContextValue {
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Lang>("en");
+  const [lang, setLang] = useState<Lang>(() => {
+    const saved = localStorage.getItem("lang");
+    return saved === "ar" ? "ar" : "en";
+  });
 
   const dir = lang === "ar" ? "rtl" : "ltr";
 
@@ -26,7 +29,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   }, [lang, dir]);
 
-  const toggleLang = () => setLang((prev) => (prev === "en" ? "ar" : "en"));
+  const toggleLang = () =>
+    setLang((prev) => {
+      const next = prev === "en" ? "ar" : "en";
+      localStorage.setItem("lang", next);
+      return next;
+    });
 
   return (
     <LanguageContext.Provider value={{ lang, dir, t: translations[lang], toggleLang }}>
