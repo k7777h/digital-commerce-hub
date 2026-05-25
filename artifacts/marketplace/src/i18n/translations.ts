@@ -13,6 +13,22 @@ export const translations = {
 
     langToggle: "العربية",
 
+    cart: {
+      title: "Shopping Cart",
+      empty: "Your cart is empty",
+      emptySub: "Browse products and add items to your cart.",
+      browseProducts: "Browse Products",
+      items: (n: number) => `${n} ${n === 1 ? "item" : "items"}`,
+      total: "Total",
+      checkout: "Checkout",
+      remove: "Remove",
+      addedToCart: "Added to cart",
+      addedToCartDesc: (name: string) => `"${name}" has been added to your cart.`,
+      addToCart: "Add to Cart",
+      alreadyInCart: (n: number) => `${n} in cart`,
+      clearCart: "Clear Cart",
+    },
+
     dashboard: {
       title: "Dashboard",
       subtitle: "Overview of your marketplace activity.",
@@ -43,7 +59,7 @@ export const translations = {
       sortDesc: "Descending",
       sortAsc: "Ascending",
       inStock: (n: number) => `${n} in stock`,
-      purchase: "Purchase 1",
+      purchase: "Add to Cart",
       outOfStock: "Out of Stock",
       noMatch: "No products match your criteria",
       noMatchSub: "Try adjusting your filters or search term.",
@@ -64,6 +80,7 @@ export const translations = {
       addedOn: (date: string) => `Added on ${date}`,
       delete: "Delete",
       simulatePurchase: "Simulate Purchase",
+      addToCart: "Add to Cart",
       productDetails: "Product Details",
       productDetailsDesc: "Manage this product's information.",
       edit: "Edit",
@@ -143,6 +160,22 @@ export const translations = {
 
     langToggle: "English",
 
+    cart: {
+      title: "سلة التسوق",
+      empty: "سلتك فارغة",
+      emptySub: "تصفح المنتجات وأضف العناصر إلى سلتك.",
+      browseProducts: "تصفح المنتجات",
+      items: (n: number) => `${n} ${n === 1 ? "عنصر" : "عناصر"}`,
+      total: "الإجمالي",
+      checkout: "إتمام الشراء",
+      remove: "إزالة",
+      addedToCart: "تمت الإضافة إلى السلة",
+      addedToCartDesc: (name: string) => `تمت إضافة "${name}" إلى سلتك.`,
+      addToCart: "أضف إلى السلة",
+      alreadyInCart: (n: number) => `${n} في السلة`,
+      clearCart: "إفراغ السلة",
+    },
+
     dashboard: {
       title: "لوحة التحكم",
       subtitle: "نظرة عامة على نشاط السوق.",
@@ -173,7 +206,7 @@ export const translations = {
       sortDesc: "تنازلي",
       sortAsc: "تصاعدي",
       inStock: (n: number) => `${n} في المخزون`,
-      purchase: "شراء واحد",
+      purchase: "أضف إلى السلة",
       outOfStock: "نفذ المخزون",
       noMatch: "لا توجد منتجات تطابق معاييرك",
       noMatchSub: "حاول تعديل الفلاتر أو مصطلح البحث.",
@@ -194,6 +227,7 @@ export const translations = {
       addedOn: (date: string) => `تمت الإضافة في ${date}`,
       delete: "حذف",
       simulatePurchase: "محاكاة الشراء",
+      addToCart: "أضف إلى السلة",
       productDetails: "تفاصيل المنتج",
       productDetailsDesc: "إدارة معلومات هذا المنتج.",
       edit: "تعديل",

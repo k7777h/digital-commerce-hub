@@ -1,25 +1,28 @@
 import { useState } from "react";
-import { useListProducts, usePurchaseProduct, getListProductsQueryKey } from "@workspace/api-client-react";
+import { useListProducts, getListProductsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Package, Search, Filter, ShoppingCart } from "lucide-react";
+import { Loader2, Package, Search, Filter, ShoppingCart, Check } from "lucide-react";
 import { Link } from "wouter";
 import { formatCurrency } from "@/lib/format";
-import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useLang } from "@/i18n/LanguageContext";
+import { useCart } from "@/context/CartContext";
+import { cn } from "@/lib/utils";
 
 export default function Products() {
   const { t } = useLang();
   const tp = t.products;
+  const tc = t.cart;
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "price" | "stock" | "createdAt">("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [justAdded, setJustAdded] = useState<Set<number>>(new Set());
 
   useState(() => {
     const handler = setTimeout(() => {
@@ -28,34 +31,40 @@ export default function Products() {
     return () => clearTimeout(handler);
   });
 
-  const queryParams = {
-    search: debouncedSearch || undefined,
-    sortBy,
-    sortOrder
-  };
+  const queryParams = { search: debouncedSearch || undefined, sortBy, sortOrder };
 
-  const { data: products, isLoading } = useListProducts(
-    queryParams,
-    { query: { queryKey: getListProductsQueryKey(queryParams) } }
-  );
-
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  const purchaseProduct = usePurchaseProduct({
-    mutation: {
-      onSuccess: () => {
-        toast({ title: t.productDetail.toastPurchased, description: t.productDetail.toastPurchasedDesc });
-        queryClient.invalidateQueries({ queryKey: getListProductsQueryKey() });
-      },
-      onError: (err) => {
-        toast({ title: t.productDetail.toastPurchaseFailed, description: err.error, variant: "destructive" });
-      }
-    }
+  const { data: products, isLoading } = useListProducts(queryParams, {
+    query: { queryKey: getListProductsQueryKey(queryParams) },
   });
 
-  const handlePurchase = (id: number) => {
-    purchaseProduct.mutate({ id, data: { quantity: 1 } });
+  const { toast } = useToast();
+  const { addToCart, getQuantity } = useCart();
+
+  const handleAddToCart = (product: { id: number; name: string; price: number; imageUrl: string | null; category: string; stock: number }) => {
+    if (product.stock === 0) return;
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      imageUrl: product.imageUrl,
+      category: product.category,
+    });
+    toast({
+      title: tc.addedToCart,
+      description: tc.addedToCartDesc(product.name),
+    });
+    setJustAdded((prev) => {
+      const next = new Set(prev);
+      next.add(product.id);
+      setTimeout(() => {
+        setJustAdded((s) => {
+          const n = new Set(s);
+          n.delete(product.id);
+          return n;
+        });
+      }, 1500);
+      return next;
+    });
   };
 
   return (
@@ -65,7 +74,10 @@ export default function Products() {
           <h1 className="text-3xl font-bold tracking-tight">{tp.title}</h1>
           <p className="text-muted-foreground mt-2">{tp.subtitle}</p>
         </div>
-        <Link href="/products/new" className="inline-flex items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:opacity-90">
+        <Link
+          href="/products/new"
+          className="inline-flex items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:opacity-90"
+        >
           {tp.addProduct}
         </Link>
       </div>
@@ -110,54 +122,101 @@ export default function Products() {
         </div>
       ) : products && products.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {products.map(product => (
-            <Card key={product.id} className="overflow-hidden flex flex-col transition-all hover:border-primary/50 hover:shadow-md">
-              <Link href={`/products/${product.id}`} className="block relative aspect-video bg-muted group">
-                {product.imageUrl ? (
-                  <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                    <Package className="w-8 h-8 opacity-20" />
+          {products.map((product) => {
+            const qty = getQuantity(product.id);
+            const added = justAdded.has(product.id);
+            return (
+              <Card
+                key={product.id}
+                className="overflow-hidden flex flex-col transition-all hover:border-primary/50 hover:shadow-md"
+              >
+                <Link
+                  href={`/products/${product.id}`}
+                  className="block relative aspect-video bg-muted group"
+                >
+                  {product.imageUrl ? (
+                    <img
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                      <Package className="w-8 h-8 opacity-20" />
+                    </div>
+                  )}
+                  {product.stock === 0 && (
+                    <div className="absolute top-2 end-2">
+                      <Badge variant="destructive">{tp.outOfStock}</Badge>
+                    </div>
+                  )}
+                  {qty > 0 && (
+                    <div className="absolute top-2 start-2">
+                      <Badge className="bg-primary text-primary-foreground">
+                        {tc.alreadyInCart(qty)}
+                      </Badge>
+                    </div>
+                  )}
+                </Link>
+                <CardContent className="p-4 flex-1 flex flex-col">
+                  <div className="flex justify-between items-start mb-2">
+                    <Link
+                      href={`/products/${product.id}`}
+                      className="font-semibold truncate pe-2 hover:underline hover:text-primary transition-colors"
+                    >
+                      {product.name}
+                    </Link>
+                    <div className="font-medium text-primary whitespace-nowrap">
+                      {formatCurrency(product.price)}
+                    </div>
                   </div>
-                )}
-                {product.stock === 0 && (
-                  <div className="absolute top-2 end-2">
-                    <Badge variant="destructive">{tp.outOfStock}</Badge>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
+                    <Badge variant="secondary" className="font-normal">
+                      {product.category}
+                    </Badge>
+                    <span>{tp.inStock(product.stock)}</span>
                   </div>
-                )}
-              </Link>
-              <CardContent className="p-4 flex-1 flex flex-col">
-                <div className="flex justify-between items-start mb-2">
-                  <Link href={`/products/${product.id}`} className="font-semibold truncate pe-2 hover:underline hover:text-primary transition-colors">
-                    {product.name}
-                  </Link>
-                  <div className="font-medium text-primary whitespace-nowrap">{formatCurrency(product.price)}</div>
-                </div>
-                <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
-                  <Badge variant="secondary" className="font-normal">{product.category}</Badge>
-                  <span>{tp.inStock(product.stock)}</span>
-                </div>
-                <div className="mt-auto pt-4 border-t border-border">
-                  <Button
-                    className="w-full"
-                    variant="outline"
-                    disabled={product.stock === 0 || purchaseProduct.isPending}
-                    onClick={() => handlePurchase(product.id)}
-                  >
-                    <ShoppingCart className="w-4 h-4 me-2" />
-                    {tp.purchase}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="mt-auto pt-4 border-t border-border">
+                    <Button
+                      className={cn(
+                        "w-full transition-all duration-300",
+                        added && "bg-green-600 hover:bg-green-700 border-green-600 text-white"
+                      )}
+                      variant={added ? "default" : "outline"}
+                      disabled={product.stock === 0}
+                      onClick={() => handleAddToCart(product)}
+                    >
+                      {added ? (
+                        <>
+                          <Check className="w-4 h-4 me-2" />
+                          {tc.addedToCart}
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="w-4 h-4 me-2" />
+                          {tp.purchase}
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       ) : (
         <Card className="p-12 flex flex-col items-center justify-center text-center">
           <Filter className="w-12 h-12 text-muted-foreground/50 mb-4" />
           <h3 className="text-lg font-medium">{tp.noMatch}</h3>
           <p className="text-muted-foreground max-w-sm mt-2 mb-4">{tp.noMatchSub}</p>
-          <Button variant="outline" onClick={() => { setSearch(""); setSortBy("createdAt"); setSortOrder("desc"); }}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSearch("");
+              setSortBy("createdAt");
+              setSortOrder("desc");
+            }}
+          >
             {tp.clearFilters}
           </Button>
         </Card>

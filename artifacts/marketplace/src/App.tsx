@@ -10,6 +10,7 @@ import Products from "@/pages/products";
 import ProductNew from "@/pages/product-new";
 import ProductDetail from "@/pages/product-detail";
 import { LanguageProvider } from "@/i18n/LanguageContext";
+import { CartProvider } from "@/context/CartContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,14 +39,16 @@ function Router() {
 function App() {
   return (
     <LanguageProvider>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
-          </WouterRouter>
-          <Toaster />
-        </TooltipProvider>
-      </QueryClientProvider>
+      <CartProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <Router />
+            </WouterRouter>
+            <Toaster />
+          </TooltipProvider>
+        </QueryClientProvider>
+      </CartProvider>
     </LanguageProvider>
   );
 }
