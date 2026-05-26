@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useGetProductStats, useListProducts, getGetProductStatsQueryKey, getListProductsQueryKey } from "@workspace/api-client-react";
 import { formatCurrency } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, AlertTriangle, TrendingUp, Loader2, ShoppingCart, Check, Minus, ArrowRight, ArrowLeft, Sparkles } from "lucide-react";
+import { Package, AlertTriangle, TrendingUp, Loader2, ShoppingCart, Check, Minus } from "lucide-react";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { useLang } from "@/i18n/LanguageContext";
@@ -16,7 +16,6 @@ export default function Dashboard() {
   const td = t.dashboard;
   const tc = t.cart;
   const tp = t.products;
-  const isRtl = lang === "ar";
   const { addToCartWithQty, getQuantity } = useCart();
   const { toast } = useToast();
   const [justAdded, setJustAdded] = useState<Set<number>>(new Set());
@@ -57,39 +56,8 @@ export default function Dashboard() {
     });
   };
 
-  const ArrowIcon = isRtl ? ArrowLeft : ArrowRight;
-
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-
-      {/* Hero banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-violet-700 text-primary-foreground px-8 py-10 md:px-12 md:py-14">
-        <div className="relative z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 rounded-full px-3 py-1 text-xs font-medium mb-4">
-            <Sparkles className="w-3.5 h-3.5" />
-            {td.heroBadge}
-          </div>
-          <h1 className="text-3xl md:text-4xl font-bold leading-tight mb-3">
-            {td.heroTitle}
-          </h1>
-          <p className="text-primary-foreground/80 text-base mb-6 max-w-lg">
-            {td.heroSub}
-          </p>
-          <Link
-            href="/products"
-            className="inline-flex items-center gap-2 bg-white text-primary font-semibold px-6 py-3 rounded-xl hover:bg-white/90 transition-colors text-sm shadow-lg"
-          >
-            {td.heroCta}
-            <ArrowIcon className="w-4 h-4" />
-          </Link>
-        </div>
-        {/* Decorative blobs */}
-        <div className="absolute -top-10 -end-10 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 end-12 w-72 h-72 bg-violet-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-4 end-32 opacity-10 pointer-events-none text-8xl font-black select-none">
-          {isRtl ? "🛒" : "🛒"}
-        </div>
-      </div>
 
       {/* Stats */}
       {statsLoading ? (
